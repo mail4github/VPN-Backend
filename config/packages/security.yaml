@@ -1,0 +1,103 @@
+parameters:
+    security_token_enc_algorithm: '%env(SECURITY_TOKEN_ALGORITHM)%'
+    security_token_key_password: '%env(SECURITY_KEY_PASS_SHARE)%'
+    security_token_key_private: '%env(file:SECURITY_KEY_PRIVATE_PATH)%'
+    security_token_key_public: '%env(file:SECURITY_KEY_PUBLIC_PATH)%'
+
+security:
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    providers:
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            stateless: true
+            lazy: true
+            provider: app_user_provider
+            json_login:
+                check_path: api_login
+                success_handler: App\Security\AuthenticationSuccessHandler
+            custom_authenticators:
+                - 'app.api.authenticator'
+            logout:
+                path: api_logout
+            two_factor:
+                enable_csrf: false
+                prepare_on_login: true
+                prepare_on_access_denied: true
+                check_path: 2fa_login_check
+                authentication_required_handler: App\Security\TwoFactorAuthenticationRequiredHandler
+                success_handler: App\Security\TwoFactorAuthenticationSuccessHandler
+                failure_handler: App\Security\TwoFactorAuthenticationFailureHandler
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#the-firewall
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        - { path: '^/api/id_rsa.pub', roles: PUBLIC_ACCESS }
+        - { path: '^/api/register', roles: PUBLIC_ACCESS }
+        - { path: '^/api/login', roles: PUBLIC_ACCESS }
+        - { path: '^/api/2fa_check', roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        - { path: '^/api/reset-password-code', roles: PUBLIC_ACCESS }
+        - { path: '^/api/verify-reset-code', roles: PUBLIC_ACCESS }
+        - { path: '^/api/reset-password', roles: PUBLIC_ACCESS }
+        - { path: '^/api/verify-email', roles: PUBLIC_ACCESS }
+        - { path: '^/api', roles: IS_AUTHENTICATED_FULLY }
+        - { path: '^/', roles: PUBLIC_ACCESS } # Entrypoint public access
+
+services:
+    
+    Symfony\Component\Security\Core\User\UserInterface:
+        class: 'App\Security\User\Loader\UserLoaderCustom'
+        arguments:
+            $repository: '@App\Repository\UserRepository'
+    
+    app.api.authenticator:
+        class: 'App\Security\JWTAuthenticator'
+        arguments:
+            $authenticationTokenUserExtractor: '@App\Security\Token\AuthenticationTokenUserExtractorInterface'
+            $userLoader: '@Symfony\Component\Security\Core\User\UserInterface'
+            $authorizationHeaderName: 'Authorization'
+    
+    App\Security\Token\AuthenticationTokenGeneratorInterface:
+        class: 'App\Security\Token\AuthenticationJWTTokenGenerator'
+        arguments:
+            $userPayloadGenerator: '@App\Security\Token\Payload\UserPayloadGeneratorInterface'
+            $algorithm: '%security_token_enc_algorithm%'
+            $privateKey: '%security_token_key_private%'
+            $passShare: '%security_token_key_password%'
+            
+    App\Security\Token\AuthenticationTokenUserExtractorInterface:
+        class: 'App\Security\Token\AuthenticationJWTTokenUserExtractor'
+        arguments:
+            $algorithm: '%security_token_enc_algorithm%'
+            $publicKey: '%security_token_key_public%'
+    
+    App\Security\Token\Payload\UserPayloadGeneratorInterface:
+        class: 'App\Security\Token\Payload\UserPayloadGenerator'
+    
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon

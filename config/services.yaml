@@ -1,0 +1,47 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    app.email_from: '%env(EMAIL_FROM)%'
+    app.email_verification_ttl: '%env(EMAIL_VERIFICATION_CODE_TTL)%'
+    app.password_reset_ttl: '%env(PASSWORD_RESET_TTL)%'
+    ipdata.api_base_url: '%env(IPDATA_API_BASE_URL)%'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+    App\Service\EmailVerificationService:
+        arguments:
+            $codeTtl: '%app.email_verification_ttl%'
+            $from: '%app.email_from%'
+            
+    App\Service\PasswordResetService:
+        arguments:
+            $codeTtl: '%app.password_reset_ttl%'
+            $from: '%app.email_from%'
+    
+    App\Service\CryptoGateway\CoingateGateway:
+        arguments:
+            $apiKey: '%env(COINGATE_API_KEY)%'
+            $apiBaseUrl: '%env(COINGATE_API_BASE_URL)%'
+
+    App\Service\CryptoService:
+        arguments:
+            $gateway: '@App\Service\CryptoGateway\CoingateGateway'
+    

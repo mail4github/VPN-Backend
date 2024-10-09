@@ -1,0 +1,381 @@
+openapi: 3.0.3
+info:
+  title: VPN Passport
+  description: VPN Passport
+  version: 0.1.0
+servers:
+  - url: 'https://localhost'
+paths:
+  /api/register:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  required: true
+                  example: username
+                email:
+                    type: string
+                    required: false
+                    example: username@vpn.org
+                password:
+                  type: string
+                  required: true
+                  example: nmc94358nd
+                enable2fa:
+                  type: boolean
+                  required: true
+                  example: true
+      responses:
+        200:
+          description: User created
+        400:
+          description: Bad request
+        422:
+          description: Invalid data or constraint violation
+  /api/login:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  required: true
+                  example: username@vpn.org
+                password:
+                  type: string
+                  required: true
+                  example: nmc94358nd
+      responses:
+        200:
+          description: Success message or required 2FA message
+        400:
+          description: Bad credentials
+  /api/add-email:
+      post:
+          requestBody:
+              required: true
+              content:
+                  application/json:
+                      schema:
+                          type: object
+                          properties:
+                              email:
+                                  type: string
+                                  required: false
+                                  example: username@vpn.org
+          responses:
+              200:
+                  description: Email verified
+              400:
+                  description: Bad request
+              422:
+                  description: Invalid data or constraint violation
+  /api/verify-email:
+      post:
+          requestBody:
+              required: true
+              content:
+                  application/json:
+                      schema:
+                          type: object
+                          properties:
+                              email:
+                                  type: string
+                                  required: true
+                                  example: username@vpn.org
+                              code:
+                                  type: string
+                                  required: false
+                                  example: 1234
+          responses:
+              200:
+                  description: Email verified
+              400:
+                  description: Bad request
+              422:
+                  description: Invalid data or constraint violation
+  /api/reset-password-code:
+      get:
+        summary: Send a password reset code via email
+        parameters:
+          - in: path
+            name: login
+            schema: 
+                type: string
+            required: true
+            description: User login (not email!)
+        responses: 
+            200: 
+                description: Email with code was sent successfully
+                content: 
+                    application/json:
+                        schema: 
+                            type: object
+                            properties: 
+                                result:
+                                    type: string
+                                    example: Successfully sent password reset code
+                                address:
+                                    type: string
+                                    example: user@email.org
+            400:
+                description: User does not have verified email
+            404:
+                description: User not found
+  /api/verify-reset-code:
+    post:
+        summary: Verify reset password code
+        requestBody:
+          required: true
+          content: 
+              application/json:
+                  schema: 
+                      type: object
+                      properties: 
+                          login:
+                              type: string
+                              required: true
+                          code:
+                              type: string
+                              required: true
+        responses: 
+            200:
+                description: 'Code verified and one-time token generated'
+                content: 
+                    application/json:
+                        schema: 
+                            type: object
+                            properties: 
+                                token:
+                                    type: string
+                                    description: One-time token to reset password
+            401:
+                description: Invalid code
+            404:
+                description: User not found
+  /api/reset-password:
+        post:
+            summary: Update user password with one-time token
+            requestBody: 
+                content: 
+                    application/json:
+                        schema: 
+                            type: object
+                            properties: 
+                                token:
+                                    type: string
+                                    required: true
+                                password:
+                                    type: string
+                                    required: true
+            responses: 
+                200:
+                    description: Password updated
+                404:
+                    description: User not found
+  /api/2fa_check:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                _auth_code:
+                  type: string
+                  required: true
+                  example: 789123
+                  description: Google Authenticator code or recovery code
+      responses:
+        200:
+          description: '2FA passed'
+        403:
+          description: '2FA failed'
+  /api/2fa_qr:
+    get:
+      responses:
+        200:
+          description: 'Generated QR code'
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: '2FA is not enabled'
+        401:
+          description: 'User is not authenticated'
+  /api/2fa/configure:
+        summary: Prepares user to interact with 2fa
+        get:
+            responses:
+                401:
+                    description: 'Authentication required'
+                200:
+                    description: 'Codes issued'
+  /api/2fa/enable:
+      summary: Checks code with Google Authenticator and enables 2fa for user on success
+      post:
+          requestBody:
+              required: true
+              content: 
+                  application/json:
+                      schema:
+                          type: object
+                          properties:
+                              _auth_code:
+                                  type: string
+                                  required: true
+                                  example: 789123
+                                  description: Google Authenticator code
+          responses: 
+            200:
+                description: 2FA enabled
+            400:
+                description: Invalid code
+  /api/2fa/disable:
+      summary: Disables 2FA for user
+      get:
+          responses: 
+              200: 
+                  description: Settings updated
+              401:
+                  description: Unauthorized action
+  /api/profile:
+      summary: Fetch current user info
+      get:
+          responses:
+              200:
+                  description: 'Array of User properties'
+              401:
+                  description: 'User is not authenticated'
+  /api/logout:
+    summary: Logout from application
+    get:
+      responses:
+        200:
+          description: Successful logout
+        302:
+          description: Successful logout
+  /api/servers:
+    get:
+      summary: Retrieves a list of VPN servers
+      operationId: index
+      tags:
+        - VPN Servers
+      parameters:
+        - name: pick_out
+          in: query
+          description: Pick out servers based on certain criteria
+          required: false
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          description: Sort servers based on specified criteria
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: Filter servers by country
+          required: false
+          schema:
+            type: string
+        - name: for_free
+          in: query
+          description: Filter servers that are available for free
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limited_time_rent_available
+          in: query
+          description: Filter servers with limited time rent available
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limited_traffic_rent_available
+          in: query
+          description: Filter servers with limited traffic rent available
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: protocol
+          in: query
+          description: Filter servers by protocol
+          required: false
+          schema:
+            type: string
+        - name: residential_ip
+          in: query
+          description: Filter servers with residential IP
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: A list of VPN servers
+          content:
+            application/json:
+              schema:
+                
+                type: object
+                properties:
+
+                  success:
+                    type: integer
+                  message:
+                    type: string
+                  error_code:
+                    type: string
+
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        country:
+                          type: string
+                        IP:
+                          type: string
+                        created:
+                          type: string
+                          format: date-time
+                        modified:
+                          type: string
+                          format: date-time
+                        connection_quality:
+                          type: string
+                        added_to_favorites:
+                          type: boolean
+                        created_by:
+                          type: integer
+                        is_free:
+                          type: boolean
+                        price:
+                          type: number
+                        protocol:
+                          type: string
+                        user_name:
+                          type: string
+                        residential_ip:
+                          type: boolean
+        '400':
+          description: Invalid request parameters

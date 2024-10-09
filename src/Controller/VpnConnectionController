@@ -1,0 +1,219 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\VpnConnection;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Service\UsefulToolsHelper;
+
+use DateTime;
+
+/**
+ * Class VpnConnectionController
+ * @package App\Controller
+ */
+class VpnConnectionController extends AbstractController
+{
+    /**
+     * Retrieves a list of connections to VPN servers.
+     *
+     * @Route("/api/vpn_connections", name="vpn_connections", methods={"GET"})
+     * @param UsefulToolsHelper $usefulToolsHelper
+     * @param EntityManagerInterface $entityManager
+     * @param Request $request
+     * @return JsonResponse
+     * @throws Exception
+     */
+    #[Route('/api/vpn_connections', name: 'vpn_connections', methods: [Request::METHOD_GET])]
+    public function vpnConnections(UsefulToolsHelper $usefulToolsHelper, EntityManagerInterface $entityManager, Request $request): JsonResponse
+    {
+        // Get parameters from the request 
+        $sortBy = $request->query->get('sort_by') ?: 'created_desc'; // "sort_by" (can have the following values:  "created_asc", "created_desc", "ip_asc", "ip_desc", "country_desc", "country_asc")
+        
+        $userId = $request->query->get('user_id') ?: ''; // "user_id" Retrieve list of connections which have user_id name like that value
+
+        $offset = $request->query->get('offset') ?: 0; // "offset" Skip the first `offset` rows
+
+        $limit = $request->query->get('limit') ?: 24; // "limit" Return the `limit` rows maximum
+        
+        $vpnConnections = [];
+        
+        if (@$_ENV['MOCK_DATA'] != 'true') {
+
+            $queryBuilder = $entityManager->getConnection()->createQueryBuilder();
+            $queryBuilder
+                ->select('*')
+                ->from('app.public."vpn_connection"', 'cncts')
+                ->setFirstResult($offset)
+                ->setMaxResults($limit)
+            ;
+            
+            if (!empty($userId)) {
+                $queryBuilder->where('cncts.user_id = :user_id')->setParameter('user_id', $userId);
+            }
+            
+            switch ($sortBy) {
+                case 'created_desc': 
+                    $queryBuilder->orderBy('cncts.created', 'DESC');
+                break;
+                case 'created_asc': 
+                    $queryBuilder->orderBy('cncts.created', 'ASC');
+                break;
+                case 'ip_desc': 
+                    $queryBuilder->orderBy('cncts.ip', 'DESC');
+                    $queryBuilder->addOrderBy('cncts.created', 'ASC');
+                break;
+                case 'ip_asc': 
+                    $queryBuilder->orderBy('cncts.ip', 'ASC');
+                    $queryBuilder->addOrderBy('cncts.created', 'ASC');
+                break;
+                case 'country_desc': 
+                    $queryBuilder->orderBy('cncts.country', 'DESC');
+                    $queryBuilder->addOrderBy('cncts.created', 'ASC');
+                break;
+                case 'country_asc': 
+                    $queryBuilder->orderBy('cncts.country', 'ASC');
+                    $queryBuilder->addOrderBy('cncts.created', 'ASC');
+                break;
+            }
+            $vpnConnections = $queryBuilder->execute()->fetchAll();
+        }
+        else {
+            $vpnConnections = [
+                [
+                    "id" => 4,
+                    "user_id" => 1,
+                    "ip" => "192.168.1.2",
+                    "country" => "US",
+                    "created" => "2024-04-10 19:19:39",
+                    "modified" => "2024-04-10 19:19:39",
+                    "server_id" => 2,
+                    "duration" => "1000",
+                    "description" => "",
+                    "protocol" => "no protocol"
+                ],
+                [
+                    "id" => 3,
+                    "user_id" => 1,
+                    "ip" => "192.168.1.2",
+                    "country" => "US",
+                    "created" => "2024-04-10 17:38:43",
+                    "modified" => "2024-04-10 17:38:43",
+                    "server_id" => 2,
+                    "duration" => "1000",
+                    "description" => "",
+                    "protocol" => "WireGuard"
+                ],
+                [
+                    "id" => 2,
+                    "user_id" => 1,
+                    "ip" => "192.168.1.2",
+                    "country" => "US",
+                    "created" => "2024-04-10 17:37:39",
+                    "modified" => "2024-04-10 17:37:39",
+                    "server_id" => 2,
+                    "duration" => "100",
+                    "description" => "",
+                    "protocol" => "WireGuard"
+                ],
+                [
+                    "id" => 1,
+                    "user_id" => 2,
+                    "ip" => "1.2.3.4",
+                    "country" => "RU",
+                    "created" => "2024-04-10 10:49:18",
+                    "modified" => "2024-04-10 10:49:18",
+                    "server_id" => 1,
+                    "duration" => "10",
+                    "description" => "",
+                    "protocol" => "WireGuard"
+                ]
+            ];
+        }
+        
+        // Return JSON response
+        return $usefulToolsHelper->generate_answer($vpnConnections);
+    }
+    
+    /**
+     * Add new VPN Connection.
+     *
+     * @Route("/api/vpn_connection", name="add_vpn_connection", methods={"POST"})
+     * @param UsefulToolsHelper $usefulToolsHelper
+     * @param EntityManagerInterface $entityManager
+     * @param Request $request
+     * @return JsonResponse
+     * @throws Exception
+     */
+    #[Route('/api/vpn_connection', name: 'add_vpn_connection', methods: [Request::METHOD_POST])]
+    public function addVpnConnection(UsefulToolsHelper $usefulToolsHelper, EntityManagerInterface $entityManager, Request $request): JsonResponse
+    {
+        // Get parameters from the request
+        $userId = $request->request->get('user_id') ?: ''; // "user_id"
+        if (empty($userId)) {
+            return $usefulToolsHelper->generate_answer('', 0, 'You have to specify a user_id', 'ERROR_ADD_VPN_CONNECTION_1', 404);
+        }
+        
+        $ip = $request->request->get('ip'); // connection ip
+        if (empty($ip)) {
+            return $usefulToolsHelper->generate_answer('', 0, 'You have to specify an IP address from which the connection has been established', 'ERROR_ADD_VPN_CONNECTION_2', 404);
+        }
+        
+        $country = $request->request->get('country') ?: ''; // connection country
+        if (empty($country)) {
+            return $usefulToolsHelper->generate_answer('', 0, 'You have to specify a country from where the connection has been established', 'ERROR_ADD_VPN_CONNECTION_3', 404);
+        }
+
+        $serverId = $request->request->get('server_id') ?: ''; // serverId
+        if (empty($serverId)) {
+            return $usefulToolsHelper->generate_answer('', 0, 'You have to specify server_id, an ID of VPN server to which the connection has been established', 'ERROR_ADD_VPN_CONNECTION_4', 404);
+        }
+
+        $protocol = $request->request->get('protocol') ?: ''; // connection protocol
+        if (empty($protocol)) {
+            return $usefulToolsHelper->generate_answer('', 0, 'You have to specify a protocol by what the connection has been established', 'ERROR_ADD_VPN_CONNECTION_5', 404);
+        }
+
+        $data = [];
+        
+        if (@$_ENV['MOCK_DATA'] != 'true') {
+                        
+            $vpnConnection = new VpnConnection();
+            $vpnConnection->setUserId($userId);
+            $vpnConnection->setIp($ip);
+            $vpnConnection->setCountry($country);
+            $vpnConnection->setCreated(new DateTime());
+            $vpnConnection->setModified(new DateTime());
+            $vpnConnection->setServerId($serverId);
+            $vpnConnection->setProtocol($protocol);
+            
+            if ($request->request->get('duration') != NULL)
+                $vpnConnection->setDuration($request->request->get('duration'));
+            
+            if ($request->request->get('total_traffic') != NULL)
+                $vpnConnection->setTotalTraffic($request->request->get('total_traffic'));
+            
+            if ($request->request->get('description') != NULL)
+                $vpnConnection->setDescription($request->request->get('description'));
+
+            // tell Doctrine to save the vpnConnection
+            $entityManager->persist($vpnConnection);
+
+            // actually executes the querie
+            $entityManager->flush();
+
+            $data['id'] = $vpnConnection->getId();
+        }
+        
+        // Return JSON response
+        return $usefulToolsHelper->generate_answer($data);
+        
+    }
+        
+}

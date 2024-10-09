@@ -1,0 +1,114 @@
+{
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.2",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "ext-openssl": "*",
+        "doctrine/annotations": "^2.0",
+        "doctrine/doctrine-bundle": "^2.9",
+        "doctrine/doctrine-migrations-bundle": "^3.0",
+        "doctrine/orm": "^2.15",
+        "endroid/qr-code": "^4.8",
+        "endroid/qr-code-bundle": "^4.3",
+        "firebase/php-jwt": "^6.8",
+        "nelmio/cors-bundle": "^2.3",
+        "phpdocumentor/reflection-docblock": "^5.3",
+        "phpstan/phpdoc-parser": "^1.21",
+        "scheb/2fa-backup-code": "^6.8",
+        "scheb/2fa-bundle": "^6.8",
+        "scheb/2fa-google-authenticator": "*",
+        "symfony-bundles/json-request-bundle": "^4.1",
+        "symfony/console": "6.3.*",
+        "symfony/dotenv": "6.3.*",
+        "symfony/flex": "^2",
+        "symfony/form": "6.3.*",
+        "symfony/framework-bundle": "6.3.*",
+        "symfony/http-client": "6.3.*",
+        "symfony/mailer": "6.3.*",
+        "symfony/monolog-bundle": "^3.0",
+        "symfony/property-access": "6.3.*",
+        "symfony/property-info": "6.3.*",
+        "symfony/runtime": "6.3.*",
+        "symfony/security-bundle": "6.3.*",
+        "symfony/serializer": "6.3.*",
+        "symfony/validator": "6.3.*",
+        "symfony/yaml": "6.3.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "symfony/flex": true,
+            "symfony/runtime": true,
+            "endroid/installer": true
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
+    "replace": {
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php72": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php74": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*"
+    },
+    "scripts": {
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        },
+        "post-install-cmd": [
+            "@auto-scripts"
+        ],
+        "post-update-cmd": [
+            "@auto-scripts"
+        ],
+        "phpunit": "./bin/phpunit --testdox",
+        "phpstan": "./vendor/bin/phpstan analyze --no-progress",
+        "psalm": "./vendor/bin/psalm --no-progress --show-info=true",
+        "php-cs-try": "PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --verbose --dry-run",
+        "php-cs-fix": "PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --verbose",
+        "test-rules": [
+            "@php-cs-fix",
+            "@phpstan",
+            "@psalm"
+        ]
+    },
+    "conflict": {
+        "symfony/symfony": "*"
+    },
+    "extra": {
+        "symfony": {
+            "allow-contrib": false,
+            "require": "6.3.*",
+            "docker": true
+        }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.20",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "10",
+        "symfony/browser-kit": "6.3.*",
+        "symfony/css-selector": "6.3.*",
+        "symfony/debug-bundle": "6.3.*",
+        "symfony/maker-bundle": "^1.48",
+        "symfony/phpunit-bridge": "^6.3",
+        "symfony/stopwatch": "6.3.*",
+        "symfony/web-profiler-bundle": "6.3.*",
+        "vimeo/psalm": "^5.13"
+    }
+}

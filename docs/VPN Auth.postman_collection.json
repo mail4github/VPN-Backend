@@ -1,0 +1,215 @@
+{
+	"info": {
+		"_postman_id": "0fa65818-63a8-4cb4-923a-92d4b547167c",
+		"name": "VPN Auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1920852"
+	},
+	"item": [
+		{
+			"name": "Profile",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"test_06\",\n    \"password\": \"Aaaaaaaa1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/profile",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Authorization",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"demo_19\",\n    \"password\": \"Aaaaaa01\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Public Key",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/id_rsa.pub",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"id_rsa.pub"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "2fa Configure",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/2fa/configure",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"2fa",
+						"configure"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2fa verify",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"_auth_code\": \"239033\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/2fa_check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"2fa_check"
+					],
+					"query": [
+						{
+							"key": "_auth_code",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJub2R1cy52cG4iLCJpZCI6ImRlbW9fMTkiLCJyb2xlcyI6WyJJU19BVVRIRU5USUNBVEVEXzJGQV9JTl9QUk9HUkVTUyJdLCJleHAiOjE2OTQyOTI0NDksImlhdCI6MTY5NDI5MjE0OX0.VOkOeaMq0eru8Ztf_BVAwG0vZWf9_VQJFcfwcWhBTrmORhHhndTE5PTEOlkuz0qIxR2lnzgBVPdSaduQXXOq7tVt1qD1jefHqgmlWj32t_HSzyudj0innvQIWgLV2JYM9rRXhSstaZ4pJi1WbKhRmKJCVlYHk4PTuLx5CwI9WDy552RlOrcgUyncjO4tV7vBzO-5EFhv5SDeB5a0ebECGxuN_dXjBTtNgk9h-frqbsua7Az7p-fqobD17P84emNMkytRcR6H_p-q7k6ba_B2bJDnE5YKa9T9vNNOlIJ7X3pjGGe4qa9OhuhDzE7HV_Wm-P_Z-KMHaciYPsHNvjt00A",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "bearer",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpZCI6InRlc3RfMDYiLCJyb2xlcyI6WyJST0xFX1VTRVIiXX0.Mh0ZwR9deGbvCeup01JbPNb3AkGjvlJ2sxV84NI7-HEI3MdiliflAKhQqR1nA9Y0TZdk2b83lP2IIWSItzPF7DVR2diQCvAg93ME9h2VcnLWxh7fhF7vr9ik831BDmXkifpyjGDuYcvH6OUYAE9ctFJUE_v49bKT3DSwscoNAMI1CMQaG0VVZRUUVt4zbohxYQDBVIaeMx_NVdNQDHKeZMquyrJsb5VegDNPmd8u-t2C4DdvnaqsrUmUWBiV3WylK5_kdcXNSvPjjFwqKBXpxia1Al7fUodrirBr7wAdcsZy8OBdALoB2Q31WXuHu1hwURd6hAsdTzFDSj4APvXRcw",
+			"disabled": true
+		},
+		{
+			"key": "base_url",
+			"value": "http://localhost:20080"
+		},
+		{
+			"key": "host",
+			"value": "https://localhost",
+			"disabled": true
+		}
+	]
+}

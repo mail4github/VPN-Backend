@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20240503184559 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return '';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE transaction ADD connection_id INT DEFAULT 0');
+        $this->addSql('COMMENT ON COLUMN transaction.connection_id IS \'ID of VPN connection in the vpn_connection table\'');
+        $this->addSql('CREATE INDEX idx_transaction_connection_id ON transaction (connection_id)');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE transaction DROP connection_id');
+    }
+}
